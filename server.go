@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"log"
 	"net"
@@ -84,13 +85,21 @@ func (s *Server) Run() error {
 				log.Print(err)
 			}
 			log.Print("Writing to connections: " + str)
+
+			idx := 0
 			for _, conn := range s.connections {
 				_, err := conn.Write([]byte(str))
-				if err != nil {
-					log.Print("Here 2")
+				if err != nil && !errors.Is(err, net.ErrClosed) {
 					log.Print(err)
+				} else {
+					// If a connection doesn't error, or is not closed bring it forward
+					s.connections[idx] = conn
+					idx++
 				}
 			}
+
+			// Remove redundant or closed connections at the end of the list
+			s.connections = s.connections[:idx]
 		}
 	}()
 
@@ -115,7 +124,7 @@ func (s *Server) Run() error {
 					command, err := reader.ReadString('\n')
 					if err != nil {
 						if err == io.EOF {
-							log.Print("Connection closed by client")
+							log.Print("Console connection closed by client")
 						} else {
 							log.Printf("Error reading from connection: %v", err)
 						}
