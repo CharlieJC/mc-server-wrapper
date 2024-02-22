@@ -67,7 +67,7 @@ func (s *Server) Run() error {
 		for {
 			conn, err := s.listener.Accept()
 			if err != nil {
-				log.("Error waiting for new connection", err)
+				log.Print("Error waiting for new connection", err)
 			}
 			s.newConnections <- conn
 		}
