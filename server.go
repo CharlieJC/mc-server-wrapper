@@ -67,8 +67,7 @@ func (s *Server) Run() error {
 		for {
 			conn, err := s.listener.Accept()
 			if err != nil {
-				log.Print("Here 1")
-				log.Print(err)
+				log.("Error waiting for new connection", err)
 			}
 			s.newConnections <- conn
 		}
@@ -81,8 +80,12 @@ func (s *Server) Run() error {
 		for {
 			str, err := reader.ReadString('\n')
 			if err != nil {
-				log.Print("Here")
-				log.Print(err)
+				// Stdout has closed
+				if err == io.EOF {
+					log.Print("Stdout closed")
+					return
+				}
+				log.Print("Error reading server Stdout: ", err)
 			}
 			log.Print("Writing to connections: " + str)
 
